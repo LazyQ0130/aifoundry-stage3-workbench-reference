@@ -6,3 +6,5 @@
 *.pem
 npm-debug.log*
 tsconfig.tsbuildinfo
+.vercel
+.env*
