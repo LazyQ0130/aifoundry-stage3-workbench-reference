@@ -25,6 +25,6 @@ npm run dev
 
 ## Production
 
-URL：待部署验收后填写。
+URL：https://aifoundry-stage3-workbench-referenc.vercel.app/
 
-验证日期：待完成 Final Acceptance 后填写。
+验证日期：2026-10-02。独立 Neon PostgreSQL 17 + pgvector 0.8.0，四次正式 migration、Production Build 与 Stage 2/3 公网功能检查通过。Stage 3 课程仍未发布。
