@@ -1,0 +1,8 @@
+/node_modules
+/.next/
+/.runtime/
+/out/
+/.env*
+*.pem
+npm-debug.log*
+tsconfig.tsbuildinfo
