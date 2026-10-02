@@ -1,6 +1,6 @@
 # AIFoundry Stage 3 Reference — AI 知识工作台
 
-Stage 3.7 Implementation A 的独立生产参考产品。它延续 Stage 2 的账号、Session 和个人资料，加入真实 AI、结构化建议、流式回答、知识文档、pgvector 检索、RAG 与经服务端验证的引用。这里仅包含运行产品所需代码。
+Stage 3.7 Implementation A 的独立生产参考产品。它延续 Stage 2 的账号、Session 和个人资料，加入真实 AI、结构化建议、流式回答、知识文档、pgvector 检索、RAG 与经服务端验证的引用。仓库只包含产品运行代码和最小可靠性测试，不包含课程正文与作者验收快照。
 
 技术栈：Next.js 15、React 19、Prisma 6.19.3、PostgreSQL 17、pgvector。
 
@@ -16,12 +16,16 @@ Stage 3.7 Implementation A 的独立生产参考产品。它延续 Stage 2 的�
 
 ```bash
 npm install
+npm test
+npm run build
 npx prisma migrate deploy
 npx prisma migrate status
 npm run dev
 ```
 
 四次正式 migration 依次建立 Resource、User/Session、Resource.ownerId、KnowledgeDocument/KnowledgeChunk 和 `vector(1024)`。生产 Build Command 为 `npm run vercel-build`，执行 Prisma Client 生成、`migrate deploy`、`migrate status` 和 Next.js build。
+
+`npm test` 使用项目本地的 `tsx` 运行无数据库单元测试。真实模式仍有每用户每分钟 5 次 HTTP 请求限制，另按 Provider 工作量预留每分钟 10 单位：问答、建议、流式回答和检索各 1，RAG 问答 2，文档入库按分块数（最多 8）一次性预留。Mock 不消耗这份 Provider 预算。该限制基于单实例内存，不是跨实例计费系统。
 
 ## Production
 

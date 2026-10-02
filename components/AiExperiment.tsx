@@ -184,7 +184,7 @@ export default function AiExperiment() {
           {streamView.kind === "completed" && streamView.totalTokens !== null && <p className="mt-3 text-xs text-stone-500">Total tokens：{streamView.totalTokens}</p>}
         </div>}
         {streamView.kind === "cancelled" && <div className="rounded-lg border border-stone-200 bg-white p-4"><p className="text-stone-600">已停止生成</p><p className="mt-2 whitespace-pre-wrap break-words">{streamView.text}</p></div>}
-        {streamView.kind === "failed" && <div role="alert" className="rounded-lg border border-rose-200 bg-white p-4"><p className="text-rose-700">{streamView.partialText ? "生成中断，以下是已经收到的部分内容。" : streamView.message}</p>{streamView.partialText && <p className="mt-2 whitespace-pre-wrap break-words">{streamView.partialText}</p>}</div>}
+        {streamView.kind === "failed" && <div role="alert" className="rounded-lg border border-rose-200 bg-white p-4"><p className="text-rose-700">{streamView.partialText ? `${streamView.message} 以下是已经收到的部分内容。` : streamView.message}</p>{streamView.partialText && <p className="mt-2 whitespace-pre-wrap break-words">{streamView.partialText}</p>}</div>}
       </div>}
     </section>
   );

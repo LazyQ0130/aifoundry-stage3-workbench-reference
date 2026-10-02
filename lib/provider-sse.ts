@@ -1,5 +1,5 @@
 /** Parses Provider SSE framing. This module contains no credentials or network code. */
-export type ProviderFrame = { type: "delta"; text: string } | { type: "usage"; value: unknown };
+export type ProviderFrame = { type: "delta"; text: string } | { type: "usage"; value: unknown } | { type: "finish"; reason: string | null };
 
 export class ProviderSseParser {
   private decoder = new TextDecoder();
@@ -52,8 +52,14 @@ export class ProviderSseParser {
     const text = delta && typeof delta === "object" ? (delta as Record<string, unknown>).content : null;
     if (typeof text === "string" && text) {
       this.textLength += text.length;
+      // Absolute defensive bound for abnormal streams; normal truncation uses finish_reason=length.
       if (this.textLength > 4000) throw new Error("STREAM_TEXT_LIMIT");
       frames.push({ type: "delta", text });
+    }
+    if (first && typeof first === "object" && Object.hasOwn(first, "finish_reason")) {
+      const reason = (first as Record<string, unknown>).finish_reason;
+      if (reason !== null && typeof reason !== "string") throw new Error("INVALID_STREAM");
+      frames.push({ type: "finish", reason });
     }
     if (value.usage) frames.push({ type: "usage", value: value.usage });
     return frames;

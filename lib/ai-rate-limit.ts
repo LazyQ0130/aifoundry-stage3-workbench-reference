@@ -1,17 +1,10 @@
 import "server-only";
+import { providerMode } from "@/lib/ai-provider";
+import { reserveForProviderMode } from "@/lib/provider-work-budget";
+export { allowAiRequest } from "@/lib/request-work-budget";
 
 // Stage 3 V1 single-instance guard. Serverless instances do not share this Map.
-const attempts = new Map<number, number[]>();
-const windowMs = 60_000;
-const maxAttempts = 5;
-
-export function allowAiRequest(userId: number, now = Date.now()): boolean {
-  const recent = (attempts.get(userId) ?? []).filter((time) => now - time < windowMs);
-  if (recent.length >= maxAttempts) {
-    attempts.set(userId, recent);
-    return false;
-  }
-  recent.push(now);
-  attempts.set(userId, recent);
-  return true;
+/** Request counting stays separate from real Provider work counting. */
+export function allowProviderWork(userId: number, units: number): boolean {
+  return reserveForProviderMode(providerMode(), userId, units);
 }

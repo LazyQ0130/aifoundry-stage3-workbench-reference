@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentSession, rejectCrossOriginWrite, unauthorized } from "@/lib/auth";
-import { allowAiRequest } from "@/lib/ai-rate-limit";
+import { allowAiRequest, allowProviderWork } from "@/lib/ai-rate-limit";
 import { aiErrorResponse, aiFailure, aiHeaders } from "@/lib/ai-http";
-import { embed, type AiEmbedding } from "@/lib/ai-provider";
+import { AiProviderError, embed, type AiEmbedding } from "@/lib/ai-provider";
 import { chunkKnowledgeText, KnowledgeLimitError, maxKnowledgeContent } from "@/lib/knowledge-chunks";
 import { embeddingDimension, vectorLiteral } from "@/lib/knowledge-vector";
 import { prisma } from "@/lib/prisma";
@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
   try { chunks = chunkKnowledgeText(input.content); }
   catch (error) { return aiFailure(400, error instanceof KnowledgeLimitError && error.code === "CHUNKS" ? "最多可生成 8 个分块，请缩短或合并段落。" : "资料内容不符合限制。"); }
   if (!allowAiRequest(session.user.id)) return aiFailure(429, "请求太频繁，请一分钟后再试。");
+  try {
+    if (!allowProviderWork(session.user.id, chunks.length)) return aiFailure(429, "本分钟模型调用预算已用完，请稍后再试。");
+  } catch (error) { return aiErrorResponse(error); }
 
   let documentId: number;
   try {
@@ -54,10 +57,12 @@ export async function POST(request: NextRequest) {
     documentId = document.id;
   } catch { return aiFailure(503, "资料暂时无法保存。"); }
 
+  const deadline = AbortSignal.timeout(75_000);
   try {
     // External calls happen outside the short database transaction.
     const embeddings: AiEmbedding[] = [];
-    for (const chunk of chunks) embeddings.push(await embed(chunk));
+    for (const chunk of chunks) embeddings.push(await embed(chunk, { signal: deadline }));
+    if (deadline.aborted) throw new AiProviderError("TIMEOUT");
     await prisma.$transaction(async transaction => {
       for (let position = 0; position < chunks.length; position++) {
         const result = embeddings[position];
@@ -75,6 +80,6 @@ export async function POST(request: NextRequest) {
     }, { status: 201, headers: aiHeaders });
   } catch (error) {
     await prisma.knowledgeDocument.update({ where: { id: documentId }, data: { status: "failed" } }).catch(() => {});
-    return aiErrorResponse(error);
+    return aiErrorResponse(deadline.aborted ? new AiProviderError("TIMEOUT") : error);
   }
 }

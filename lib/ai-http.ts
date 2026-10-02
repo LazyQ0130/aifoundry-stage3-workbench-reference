@@ -23,6 +23,7 @@ export function aiErrorResponse(error: unknown) {
 }
 
 export function aiStreamErrorMessage(error: unknown) {
+  if (error instanceof AiProviderError && error.code === "OUTPUT_TRUNCATED") return "回答达到长度上限，生成已中断。";
   if (error instanceof AiProviderError && error.code === "TIMEOUT") return "模型等待超时，请稍后重试。";
   if (error instanceof AiProviderError && error.code === "UNAUTHORIZED") return "模型服务鉴权失败，请联系项目维护者。";
   return "模型服务暂时不可用，请稍后重试。";

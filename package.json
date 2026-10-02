@@ -2,7 +2,7 @@
   "name": "personal-knowledge-workbench",
   "version": "0.1.0",
   "private": true,
-  "description": "AIFoundry Stage 1 Starter —— 个人知识工作台",
+  "description": "AIFoundry Stage 3 Reference —— AI 知识工作台",
   "engines": {
     "node": ">=18.18.0"
   },
@@ -11,7 +11,8 @@
     "postinstall": "prisma generate",
     "build": "prisma generate && next build",
     "vercel-build": "prisma generate && prisma migrate deploy && prisma migrate status && next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "node --import tsx --test tests/reliability.test.mjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
@@ -29,7 +30,8 @@
     "postcss": "8.5.28",
     "prisma": "6.19.3",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "tsx": "4.23.15"
   },
   "overrides": {
     "postcss": "$postcss",

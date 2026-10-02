@@ -55,7 +55,7 @@ export default function RagQuestion() {
     <div aria-live="polite" className="mt-4">
       {error && <p role="alert" className="text-sm text-rose-700">{error}</p>}
       {result && <div className="space-y-4">
-        <p className="text-xs font-medium text-emerald-900">{result.kind === "mock" ? "Mock 模式 · 流程示例" : "真实模型 · 知识库问答"}</p>
+        <p className="text-xs font-medium text-emerald-900">{result.kind === "mock" ? "Mock 模式 · 未调用真实模型" : "真实模型 · 知识库问答"}</p>
         {!result.previewOnly && <div className="rounded-lg border border-stone-200 bg-white p-4"><h3 className="font-semibold text-stone-900">{result.status === "insufficient" ? "当前资料中没有足够依据" : "回答"}</h3><p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-stone-700">{result.answer}</p></div>}
         {!result.previewOnly && <div className="rounded-lg border border-emerald-200 bg-white p-4"><h3 className="font-semibold text-stone-900">回答实际引用</h3>
           {result.sources.length === 0 ? <p className="mt-2 text-sm text-stone-600">本次没有经过验证的引用来源。</p> : <ol className="mt-2 space-y-3">{result.sources.map((source, index) => <li key={source.sourceId} className="break-words border-t border-stone-100 pt-2 text-sm text-stone-700">

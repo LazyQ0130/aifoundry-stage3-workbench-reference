@@ -103,7 +103,7 @@ async function openChat(prompt: string, options: { structured?: boolean; streami
 }
 
 /** The same server-only adapter handles embeddings, with independent credentials/config. */
-export async function embed(input: string): Promise<AiEmbedding> {
+export async function embed(input: string, options: { signal?: AbortSignal } = {}): Promise<AiEmbedding> {
   const text = bounded(input, 1000);
   if (providerMode() === "mock") {
     const vector = mockEmbedding(text);
@@ -111,7 +111,7 @@ export async function embed(input: string): Promise<AiEmbedding> {
   }
   if (process.env.AI_EMBEDDING_DIMENSION !== String(embeddingDimension)) throw new AiProviderError("CONFIG");
   const config = realConfig("AI_EMBEDDING");
-  const request = await openProvider(config, "/embeddings", { model: config.model, input: text, dimensions: embeddingDimension, encoding_format: "float" });
+  const request = await openProvider(config, "/embeddings", { model: config.model, input: text, dimensions: embeddingDimension, encoding_format: "float" }, options.signal);
   try {
     const data: unknown = await request.response.json();
     if (!data || typeof data !== "object") throw new AiProviderError("UPSTREAM");
@@ -178,7 +178,9 @@ export async function* stream(input: string, options: { signal?: AbortSignal } =
       for (const frame of parser.push(value)) {
         if (options.signal?.aborted) throw new AiProviderError("CANCELLED");
         if (frame.type === "delta") { deltas++; yield frame; }
-        else { const usage = usageOf(frame.value); if (usage) yield { type: "usage", usage }; }
+        else if (frame.type === "finish") {
+          if (frame.reason === "length") throw new AiProviderError("OUTPUT_TRUNCATED");
+        } else { const usage = usageOf(frame.value); if (usage) yield { type: "usage", usage }; }
       }
       if (parser.done) break;
     }

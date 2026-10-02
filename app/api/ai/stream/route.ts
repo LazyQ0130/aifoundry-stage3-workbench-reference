@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { currentSession, rejectCrossOriginWrite, unauthorized } from "@/lib/auth";
-import { allowAiRequest } from "@/lib/ai-rate-limit";
+import { allowAiRequest, allowProviderWork } from "@/lib/ai-rate-limit";
 import { providerMode, stream, type AiStreamPart } from "@/lib/ai-provider";
 import { aiErrorResponse, aiFailure, aiStreamErrorMessage } from "@/lib/ai-http";
 
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
   let iterator: AsyncGenerator<AiStreamPart>;
   let first: IteratorResult<AiStreamPart>;
   try {
+    if (!allowProviderWork(session.user.id, 1)) return aiFailure(429, "本分钟模型调用预算已用完，请稍后再试。");
     mode = providerMode();
     iterator = stream(prompt, { signal });
     first = await iterator.next();

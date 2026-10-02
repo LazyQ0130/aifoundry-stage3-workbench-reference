@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentSession, rejectCrossOriginWrite, unauthorized } from "@/lib/auth";
-import { allowAiRequest } from "@/lib/ai-rate-limit";
+import { allowAiRequest, allowProviderWork } from "@/lib/ai-rate-limit";
 import { aiErrorResponse, aiFailure, aiHeaders } from "@/lib/ai-http";
 import { embed } from "@/lib/ai-provider";
 import { retrieveTopK } from "@/lib/knowledge-retrieval";
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
   if (!allowAiRequest(session.user.id)) return aiFailure(429, "请求太频繁，请一分钟后再试。");
 
   try {
+    if (!allowProviderWork(session.user.id, 1)) return aiFailure(429, "本分钟模型调用预算已用完，请稍后再试。");
     const query = await embed(input.question.trim());
     const chunks = await retrieveTopK(session.user.id, query);
     return NextResponse.json({ ok: true, kind: query.kind,
