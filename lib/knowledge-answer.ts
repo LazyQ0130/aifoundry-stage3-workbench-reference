@@ -5,8 +5,8 @@ import { type CitableChunk } from "@/lib/knowledge-citations";
 const sourceId = z.string().regex(/^SRC-CHUNK-[1-9]\d*$/);
 const answerText = (max: number) => z.string().min(1).max(max).refine(value => value.trim().length > 0);
 const answerSchema = z.discriminatedUnion("status", [
-  z.strictObject({ status: z.literal("answered"), answer: answerText(1500), sourceIds: z.array(sourceId).min(1).max(3) }),
-  z.strictObject({ status: z.literal("insufficient"), answer: answerText(500), sourceIds: z.tuple([]) }),
+  z.strictObject({ status: z.literal("answered"), answer: answerText(300), sourceIds: z.array(sourceId).min(1).max(3) }),
+  z.strictObject({ status: z.literal("insufficient"), answer: answerText(120), sourceIds: z.tuple([]) }),
 ]);
 
 export class InvalidKnowledgeAnswerError extends Error {

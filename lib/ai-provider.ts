@@ -10,7 +10,7 @@ export type AiStreamPart = { type: "delta"; text: string } | { type: "usage"; us
 export type AiEmbedding = { kind: "mock" | "real"; vector: number[]; model: string; dimension: number; usage: { promptTokens: number; totalTokens: number } | null };
 
 export class AiProviderError extends Error {
-  constructor(readonly code: "CONFIG" | "TIMEOUT" | "UNAUTHORIZED" | "UPSTREAM" | "CANCELLED") {
+  constructor(readonly code: "CONFIG" | "TIMEOUT" | "UNAUTHORIZED" | "UPSTREAM" | "CANCELLED" | "OUTPUT_TRUNCATED") {
     super(code);
   }
 }
@@ -141,6 +141,7 @@ export async function generate(input: string, options: { structured?: boolean; s
     if (!data || typeof data !== "object") throw new AiProviderError("UPSTREAM");
     const body = data as Record<string, unknown>;
     const first = Array.isArray(body.choices) ? body.choices[0] : null;
+    if (structured && first && typeof first === "object" && (first as Record<string, unknown>).finish_reason === "length") throw new AiProviderError("OUTPUT_TRUNCATED");
     const message = first && typeof first === "object" ? (first as Record<string, unknown>).message : null;
     const content = message && typeof message === "object" ? (message as Record<string, unknown>).content : null;
     if (typeof content !== "string" || !content.trim()) throw new AiProviderError("UPSTREAM");

@@ -14,6 +14,7 @@ export function aiErrorResponse(error: unknown) {
   if (error instanceof InvalidSuggestionError) return aiFailure(502, "模型返回的结构不符合要求，请重新生成。");
   if (error instanceof InvalidKnowledgeAnswerError) return aiFailure(502, "模型引用不符合要求，请重新生成。");
   if (error instanceof AiProviderError) {
+    if (error.code === "OUTPUT_TRUNCATED") return aiFailure(502, "模型输出达到长度上限，没有得到完整结构。请缩短输入或重新生成。");
     if (error.code === "CONFIG") return aiFailure(503, "模型服务尚未配置好，请联系项目维护者。");
     if (error.code === "TIMEOUT") return aiFailure(504, "模型等待超时，请稍后重试。");
     if (error.code === "UNAUTHORIZED") return aiFailure(502, "模型服务鉴权失败，请联系项目维护者。");
